@@ -1,0 +1,29 @@
+if (project.hasProperty("jacocoEnabled")) {
+    apply plugin: 'jacoco'
+
+    jacoco {
+        toolVersion = "$jacocoVersion"
+    }
+
+    tasks.withType(Test) {
+        jacoco.includeNoLocationClasses = true
+        jacoco.excludes = ['jdk.internal.*']
+    }
+
+    task codeCoverageTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
+        reports {
+            xml.enabled = true
+            html.enabled = true
+        }
+
+        def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
+        def debugTree = fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: fileFilter)
+        def mainSrc = "$project.projectDir/src/main/java"
+
+        getSourceDirectories().setFrom([mainSrc])
+        getClassDirectories().setFrom([debugTree])
+        getExecutionData().setFrom(fileTree(dir: project.buildDir, includes: [
+                '**/*.exec', '**/*.ec'
+        ]))
+    }
+}

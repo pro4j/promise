@@ -1,0 +1,3 @@
+apply from: project.rootDir.absolutePath + "/./scripts/dependencies.gradle"
+apply from: project.rootDir.absolutePath + "/./scripts/version.gradle"
+apply from: project.rootDir.absolutePath + "/./scripts/build-env.gradle"

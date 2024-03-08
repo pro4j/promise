@@ -1,0 +1,32 @@
+apply plugin: 'kotlin-android'
+
+project.ext {
+    pom_name = "promise api for java and kotlin"
+    pom_artifact_id = "promise"
+    pom_version_name = "5.0.6"
+    pom_group_id = "com.pro4j.promise"
+}
+
+apply from: project.rootDir.absolutePath + '/./scripts/jacoco.gradle'
+
+android {
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testImplementation("org.jetbrains.kotlin:kotlin-script-runtime:$kotlin_rt_version")
+
+    testImplementation 'junit:junit:' + rootProject.junitVersion
+    testImplementation 'com.google.truth:truth:' + rootProject.truthVersion
+    testImplementation "org.robolectric:robolectric:" + rootProject.robolectricVersion
+    testImplementation "org.awaitility:awaitility:" + rootProject.awaitilityVersion
+    androidTestImplementation 'androidx.test.ext:junit:' + rootProject.androidxTestJuitVersion
+    androidTestImplementation 'com.google.truth:truth:' + rootProject.truthVersion
+}

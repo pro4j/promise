@@ -1,0 +1,144 @@
+buildscript {
+    ext {
+        jacocoVersion = '0.8.4'
+        androidBuildToolVersion= '4.1.1'
+        kotlin_version = '1.4.32'
+        kotlin_rt_version = '1.4.21'
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:${androidBuildToolVersion}"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jacoco:org.jacoco.core:$jacocoVersion"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+    }
+}
+
+def localPropertiesFile = file("local.properties")
+def localProperties = new Properties();
+
+if (!localPropertiesFile.exists()) {
+    throw new GradleException("missing local.properties")
+} else {
+    localProperties.load(localPropertiesFile.newDataInputStream())
+    def sdkDir = localProperties.get("sdk.dir")
+    if (!sdkDir?.trim()) {
+        throw new GradleException("sdk.dir should be defined in local.properties")
+    }
+}
+
+apply from: "scripts/config.gradle"
+
+allprojects {
+    tasks.withType(Exec) {
+        doFirst {
+            println "execute command:" + commandLine
+        }
+    }
+
+    project.ext {
+        minSdkVersion = rootProject.ext.androidCompile.minSdkVersion
+        targetSdkVersion = rootProject.ext.androidCompile.targetSdkVersion
+        compileSdkVersion = rootProject.ext.androidCompile.compileSdkVersion
+        buildToolsVersion = rootProject.ext.androidCompile.buildToolsVersion
+
+        jniMakefile = 'src/main/jni/Android.mk'
+    }
+}
+
+configure(subprojects.findAll{ !it.name.startsWith("app")}) {
+    println ("project ${project.name} properties " + project.ext.properties)
+    apply plugin: 'com.android.library'
+    android {
+        sourceSets {
+            main {
+                manifest.srcFile 'src/main/AndroidManifest.xml'
+                java.srcDirs = ['src/main/java','src/main/kotlin']
+                assets.srcDirs = ['src/main/assets']
+                res.srcDirs = ['src/main/res']
+                jniLibs.srcDirs = ['libs']
+            }
+
+            test {
+                java.srcDirs =  ['src/test/java','src/test/kotlin']
+            }
+        }
+
+        compileSdkVersion project.ext.compileSdkVersion
+        buildToolsVersion project.ext.buildToolsVersion
+
+        defaultConfig {
+            minSdkVersion project.ext.minSdkVersion
+            targetSdkVersion project.ext.targetSdkVersion
+            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+            ndk {
+                abiFilters 'armeabi-v7a', 'arm64-v8a'
+            }
+        }
+
+        buildTypes {
+            debug {
+                debuggable true
+                jniDebuggable true
+                if (project.hasProperty("BuildRelease") && BuildRelease?.trim() == "true") {
+                    println "Create release so"
+                } else {
+                    println "Force create debug non-strip so"
+                    packagingOptions {
+                        doNotStrip "*/armeabi/*.so"
+                        doNotStrip "*/armeabi-v7a/*.so"
+                        doNotStrip "*/arm64-v8a/*.so"
+                    }
+                }
+            }
+            release {
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
+        }
+
+        lintOptions{
+            abortOnError false
+        }
+
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
+
+        buildTypes {
+            debug {
+                jniDebuggable true
+            }
+        }
+
+        testOptions {
+            unitTests {
+                includeAndroidResources = false
+            }
+        }
+
+    }
+}
+
+task cleanAll {
+    dependsOn subprojects.collect { subproject ->
+        subproject.tasks.matching { it.name == "clean" }
+    }
+    doLast {
+        file(rootDir.getPath() + "/dist/").deleteDir();
+    }
+}
+

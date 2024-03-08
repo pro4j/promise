@@ -1,0 +1,103 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+
+    sourceSets {
+        main {
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            java.srcDirs = ['src/main/java','src/main/kotlin']
+            assets.srcDirs = ['src/main/assets']
+            res.srcDirs = ['src/main/res']
+            jniLibs.srcDirs = ['libs']
+        }
+
+        test {
+            java.srcDirs =  ['src/test/java','src/test/kotlin']
+        }
+    }
+
+    compileSdkVersion project.ext.compileSdkVersion
+    buildToolsVersion project.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.pro4j.marbles"
+        minSdkVersion project.ext.minSdkVersion
+        targetSdkVersion project.ext.targetSdkVersion
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionCode 1
+        versionName "1.0"
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            jniDebuggable true
+            if (project.hasProperty("BuildRelease") && BuildRelease?.trim() == "true") {
+                println "Create release so"
+            } else {
+                println "Force create debug non-strip so"
+                packagingOptions {
+                    doNotStrip "*/armeabi/*.so"
+                    doNotStrip "*/armeabi-v7a/*.so"
+                    doNotStrip "*/arm64-v8a/*.so"
+                }
+            }
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions{
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        debug {
+            jniDebuggable true
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = false
+        }
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.aar"])
+    // OR
+    //implementation fileTree(dir: "../../promise/libs", include: ["*.jar"])
+    //implementation project(":pro4j-promise")
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation "androidx.constraintlayout:constraintlayout:2.1.4"
+
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testImplementation("org.jetbrains.kotlin:kotlin-script-runtime:$kotlin_rt_version")
+
+    testImplementation 'junit:junit:' + rootProject.junitVersion
+    testImplementation 'com.google.truth:truth:' + rootProject.truthVersion
+    testImplementation "org.robolectric:robolectric:" + rootProject.robolectricVersion
+    testImplementation "org.awaitility:awaitility:" + rootProject.awaitilityVersion
+    androidTestImplementation 'androidx.test.ext:junit:' + rootProject.androidxTestJuitVersion
+    androidTestImplementation 'com.google.truth:truth:' + rootProject.truthVersion
+}

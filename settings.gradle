@@ -1,0 +1,6 @@
+include ':app-marbles'
+
+project(':app-marbles').projectDir = new File(settingsDir, "apps/app-marbles")
+
+include ':pro4j-promise'
+project(':pro4j-promise').projectDir = new File(settingsDir, "promise")
